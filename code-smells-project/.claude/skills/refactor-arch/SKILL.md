@@ -57,7 +57,7 @@ Se uma refatoração estrutural exigir uma mudança de comportamento ou contrato
 
 4 - **Registre o baseline de execução:** identifique o comando usado para iniciar a aplicação, a porta em que ela é executada e liste todos os endpoints atualmente disponíveis, informando **método HTTP + path**. Esse baseline será usado como critério de validação na Fase 3.
 
-5 - **Gere o resumo da Fase 1:** siga exatamente o formato definido em [analise-projeto.md](references/analise-projeto.md) e apresente o resultado sob o título **"Resumo da Fase 1"**.
+5 - **Gere o resumo da Fase 1:** siga exatamente o formato definido em [project-analysis.md](references/project-analysis.md) e apresente o resultado sob o título **"Resumo da Fase 1"**.
 
 > **Importante:** a Fase 1 é apenas uma fotografia do estado atual do projeto. Não faça julgamentos, não proponha melhorias e não registre problemas ou inconsistências nesta etapa.
 
@@ -88,7 +88,7 @@ Se uma refatoração estrutural exigir uma mudança de comportamento ou contrato
 
 5 - Ao registrar o problema seja especifico registrando o arquivo e a linha(s) exatos.
 
-6 - Encontre e registre no mínimo 5 problemas.
+6 - Encontre e registre no mínimo 5 problemas com pelo menos 1 CRITICAL/HIGH.
 
 7 - Inclua verificação de APIs deprecated da linguagem/framework detectados.
 
