@@ -67,6 +67,45 @@
 | `references/refactoring-playbook` | Guia operacional para transformar os anti-patterns identificados durante a análise em correções concretas. |
 | `references/mvc-guidelines` | Regras do padrão MVC alvo (camadas e responsabilidades) |
 
+### Anti-Patterns adicionados
+
+O catálogo contém 12 anti-patterns, organizados em quatro níveis de severidade. A seleção foi construída para cobrir problemas que são detectáveis por análise estática ou contextual de código, sem depender de uma linguagem, framework ou arquitetura específica.
+
+### Visão geral da cobertura
+
+| Severidade   | Anti-Patterns                                | Principal dimensão coberta    |
+| ------------ | -------------------------------------------- | ----------------------------- |
+| **CRITICAL** | Injeção de comandos ou consultas             | Segurança e integridade       |
+| **CRITICAL** | Exposição de credenciais ou dados sensíveis  | Segurança e confidencialidade |
+| **CRITICAL** | Operação crítica sem controle de acesso      | Segurança e autorização       |
+| **HIGH**     | Responsabilidade excessiva                   | Arquitetura e manutenção      |
+| **HIGH**     | Acoplamento forte a implementações concretas | Arquitetura e testabilidade   |
+| **HIGH**     | Estado global mutável compartilhado          | Confiabilidade e arquitetura  |
+| **MEDIUM**   | Queries N+1 e operações repetitivas          | Performance e escalabilidade  |
+| **MEDIUM**   | Validação ou tratamento de erro insuficiente | Robustez e confiabilidade     |
+| **MEDIUM**   | Duplicação significativa de lógica           | Manutenção e consistência     |
+| **LOW**      | Magic numbers e literais sem contexto        | Clareza e manutenção          |
+| **LOW**      | Nomenclatura pouco expressiva                | Legibilidade                  |
+| **LOW**      | Código morto e ruído de desenvolvimento      | Organização e legibilidade    |
+
+As seções “Atenção” de cada anti-pattern foram incluídas para estabelecer limites objetivos para a classificação. Isso é especialmente importante para uma skill de análise automática, pois reduz o risco de transformar preferências de implementação, estilo ou convenções específicas de uma tecnologia em problemas reais de código.
+
+A divisão em CRITICAL → HIGH → MEDIUM → LOW permite que a skill priorize findings pelo impacto potencial, enquanto a exigência de arquivo e linha exatos transforma a identificação dos anti-patterns em findings verificáveis, em vez de recomendações genéricas.
+
+### Skill Agnóstica a tecnologia
+
+O arquivo project-analysis.md é agnóstico a tecnologia principalmente porque ele não define como uma aplicação deve ser construída, mas sim como identificar evidências sobre uma aplicação que já existe.
+
+A abordagem parte de conceitos gerais — linguagem, framework, persistência e arquitetura — e utiliza exemplos específicos apenas como sinais de detecção. 
+
+A tecnologia é tratada como evidência, não como regra de análise
+
+O princípio mais importante do arquivo está logo no início:
+
+```Toda conclusão deve derivar de evidências encontradas no repositório — nunca de suposições.```
+
+Isso torna a heurística agnóstica porque a skill não parte da premissa de que o projeto utiliza uma tecnologia específica.
+
 
 ### Resultados
 Todo
