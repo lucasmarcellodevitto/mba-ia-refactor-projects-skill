@@ -40,7 +40,7 @@
 | LOW | Import desnecessário | `task.py:3`| import json não usado|
 | LOW | Datas usando str() em vez de isoformat() | `task.py:32`| |
 
-### Construção da Skill
+## Construção da Skill
 
 ### Decisões de design
 
@@ -107,10 +107,10 @@ O princípio mais importante do arquivo está logo no início:
 Isso torna a heurística agnóstica porque a skill não parte da premissa de que o projeto utiliza uma tecnologia específica.
 
 
-### Resultados
+## Resultados
 Todo
 
-### Como Executar
+## Como Executar
 
 #### Pré-requisitos
 
