@@ -39,3 +39,147 @@
 | MEDIUM | Repetição de codigo para da regra de `overdue` | `routes/task_routes.py:30-39,71-80,283-287`| Poderia ser abstraido para um unico método|
 | LOW | Import desnecessário | `task.py:3`| import json não usado|
 | LOW | Datas usando str() em vez de isoformat() | `task.py:32`| |
+
+### Construção da Skill
+
+### Decisões de design
+
+ - Skill refactor-arch vive criada em .claude/skills/refactor-arch/, copiada dentro de cada um dos 3 projetos. 
+ 
+ - SKILL.md define 3 fases sequenciais (Análise → Auditoria → Refatoração) com 5 arquivos de referência em Markdown
+
+- 3 fases estritamente sequenciais sendo fases 1 e 2 **read-only**
+
+- Inicio da Fase 3 com confirmação obrigatória do usuário 
+
+- Preservação do contrato HTTP: mesmas URLs/métodos/respostas após a refatoração
+
+- Geração do relatório de auditoria no diretório de reports/ com classificação por severidade (CRITICAL/HIGH/MEDIUM/LOW)
+
+
+### Arquivos de referências
+
+| Arquivo | Área de conhecimento |
+|---|---|
+| `references/project-analysis` | Heurísticas para detectar linguagem, framework, banco e mapear arquitetura |
+| `references/antipattern-catalog` | referência para identificar, avaliar e classificar anti-patterns de código |
+| `references/report-template` | Formato padronizado do relatório de auditoria |
+| `references/refactoring-playbook` | Guia operacional para transformar os anti-patterns identificados durante a análise em correções concretas. |
+| `references/mvc-guidelines` | Regras do padrão MVC alvo (camadas e responsabilidades) |
+
+
+### Resultados
+Todo
+
+### Como Executar
+
+#### Pré-requisitos
+
+| Ferramenta | Versão mínima | Verificação |
+|---|---|---|
+| Claude Code CLI | latest | `claude --version` |
+| Python | 3.9+ | `python3 --version` |
+| Node.js | 18+ | `node --version` |
+| npm | 8+ | `npm --version` |
+
+---
+
+### code-smells-project
+
+```bash
+# acesse a pasta do projeto
+cd code-smells-project
+
+# crie uma virtual env
+python3 -m venv venv && source venv/bin/activate
+
+# instale as dependências
+pip install -r requirements.txt
+
+# copie e edite as variaveis de ambiente se necessário
+cp .env.example .env 
+
+# execute o projeto
+python app.py
+```
+
+Validação rápida:
+```bash
+curl http://localhost:5001/health
+curl http://localhost:5001/produtos
+curl http://localhost:5001/usuarios
+```
+---
+
+### ecommerce-api-legacy
+
+```bash
+# acesse a pasta do projeto
+cd ecommerce-api-legacy
+
+# instale as dependências
+npm install
+
+# copie e edite as variaveis de ambiente se necessário
+cp .env.example .env
+
+# execute o projeto
+npm start
+```
+
+Validação rápida:
+```bash
+
+curl -s -X POST http://localhost:3000/api/checkout \
+  -H "Content-Type: application/json" \
+  -d '{"user_id":1,"course_id":1,"card_number":"4111111111111111","email":"test@test.com"}' | jq .
+
+curl http://localhost:3000/api/admin/financial-report | jq .
+```
+--- 
+
+### task-manager-api
+
+```bash
+
+# acesse a pasta do projeto
+cd task-manager-api
+
+# crie uma virtual env
+python3 -m venv venv && source venv/bin/activate
+
+# instale as dependências
+pip install -r requirements.txt
+
+# copie e edite as variaveis de ambiente se necessário
+cp .env.example .env
+
+# popula o banco (rode antes do primeiro boot)
+python seed.py                 
+
+#Execute o projeto
+python app.py
+```
+
+Validação rápida:
+```bash
+curl http://localhost:5000/health
+curl http://localhost:5000/tasks
+curl http://localhost:5000/users
+curl "http://localhost:5000/tasks/search?status=pending"
+```
+---
+
+### Para executar a skill `refactor-arch` em um projeto
+
+```bash
+# Entre no diretório do projeto que deseja refatorar:
+cd <projeto>
+
+# execute
+claude /refactor-arch
+```
+
+### Validar que a refatoração funcionou
+
+Cada projeto expõe um endpoint `/health` que confirma que a aplicação está de pé sem expor configuração interna. Além disso, refaça os curls apresentados em cada item de validação rápida.
