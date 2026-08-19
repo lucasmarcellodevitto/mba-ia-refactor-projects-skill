@@ -122,6 +122,8 @@ Isso torna a heurística agnóstica porque a skill não parte da premissa de que
 ![05](./code-smells-project/img/05.png)
 ![06](./code-smells-project/img/06.png)
 
+---
+
 #### ecommerce-api-legacy
 
 - Relatório de auditoria pode ser contultado em [audit-project-2.md](./reports/audit-project-2.md) 
@@ -135,6 +137,7 @@ Isso torna a heurística agnóstica porque a skill não parte da premissa de que
 ![05](./ecommerce-api-legacy//img/05.png)
 ![06](./ecommerce-api-legacy//img/06.png)
 
+---
 
 #### task-manager-api
 
@@ -142,6 +145,7 @@ Isso torna a heurística agnóstica porque a skill não parte da premissa de que
 
 - Relatório de refatoração pode ser consultado em [refactor-project-3.md](./reports/refactor-project-3.md)
 
+---
 
 ## Como Executar
 
