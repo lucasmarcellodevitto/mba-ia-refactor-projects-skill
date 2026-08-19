@@ -135,7 +135,6 @@ Isso torna a heurística agnóstica porque a skill não parte da premissa de que
 ![03](./ecommerce-api-legacy//img/03.png)
 ![04](./ecommerce-api-legacy//img/04.png)
 ![05](./ecommerce-api-legacy//img/05.png)
-![06](./ecommerce-api-legacy//img/06.png)
 
 ---
 
