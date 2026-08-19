@@ -205,7 +205,7 @@ Validação rápida:
 curl http://localhost:5000/health
 curl http://localhost:5000/tasks
 curl http://localhost:5000/users
-curl "http://localhost:5000/tasks/search?status=pending"
+curl http://localhost:5000/tasks/search?status=pending
 ```
 ---
 
