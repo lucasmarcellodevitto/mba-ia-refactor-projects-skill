@@ -144,9 +144,9 @@ python app.py
 
 Validação rápida:
 ```bash
-curl http://localhost:5001/health
-curl http://localhost:5001/produtos
-curl http://localhost:5001/usuarios
+curl http://localhost:5000/health
+curl http://localhost:5000/produtos
+curl http://localhost:5000/usuarios
 ```
 ---
 
