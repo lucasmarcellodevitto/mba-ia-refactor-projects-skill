@@ -108,7 +108,22 @@ Isso torna a heurística agnóstica porque a skill não parte da premissa de que
 
 
 ## Resultados
-Todo
+
+#### code-smells-project
+
+Relatório de auditoria pode ser contultado em [audit-project-1.md](./reports/audit-project-1.md) 
+Relatório de refatoração pode ser consultado em [refactor-project-1](./reports/refactor-project-1.md)
+
+![01](./code-smells-project/img/01.png)
+![02](./code-smells-project/img/02.png)
+![03](./code-smells-project/img/03.png)
+![04](./code-smells-project/img/04.png)
+![05](./code-smells-project/img/05.png)
+![06](./code-smells-project/img/06.png)
+
+#### ecommerce-api-legacy
+
+#### task-manager-api
 
 ## Como Executar
 
