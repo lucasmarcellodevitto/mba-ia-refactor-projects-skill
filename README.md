@@ -113,7 +113,7 @@ Isso torna a heurística agnóstica porque a skill não parte da premissa de que
 
 - Relatório de auditoria pode ser contultado em [audit-project-1.md](./reports/audit-project-1.md) 
 
-- Relatório de refatoração pode ser consultado em [refactor-project-1](./reports/refactor-project-1.md)
+- Relatório de refatoração pode ser consultado em [refactor-project-1.md](./reports/refactor-project-1.md)
 
 ![01](./code-smells-project/img/01.png)
 ![02](./code-smells-project/img/02.png)
@@ -124,7 +124,16 @@ Isso torna a heurística agnóstica porque a skill não parte da premissa de que
 
 #### ecommerce-api-legacy
 
+- Relatório de auditoria pode ser contultado em [audit-project-2.md](./reports/audit-project-2.md) 
+
+- Relatório de refatoração pode ser consultado em [refactor-project-2.md](./reports/refactor-project-2.md)
+
 #### task-manager-api
+
+- Relatório de auditoria pode ser contultado em [audit-project-3.md](./reports/audit-project-3.md) 
+
+- Relatório de refatoração pode ser consultado em [refactor-project-3.md](./reports/refactor-project-3.md)
+
 
 ## Como Executar
 
