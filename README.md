@@ -128,6 +128,14 @@ Isso torna a heurística agnóstica porque a skill não parte da premissa de que
 
 - Relatório de refatoração pode ser consultado em [refactor-project-2.md](./reports/refactor-project-2.md)
 
+![01](./ecommerce-api-legacy//img/01.png)
+![02](./ecommerce-api-legacy//img/02.png)
+![03](./ecommerce-api-legacy//img/03.png)
+![04](./ecommerce-api-legacy//img/04.png)
+![05](./ecommerce-api-legacy//img/05.png)
+![06](./ecommerce-api-legacy//img/06.png)
+
+
 #### task-manager-api
 
 - Relatório de auditoria pode ser contultado em [audit-project-3.md](./reports/audit-project-3.md) 
