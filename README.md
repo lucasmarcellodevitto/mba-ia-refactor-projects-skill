@@ -111,8 +111,9 @@ Isso torna a heurística agnóstica porque a skill não parte da premissa de que
 
 #### code-smells-project
 
-Relatório de auditoria pode ser contultado em [audit-project-1.md](./reports/audit-project-1.md) 
-Relatório de refatoração pode ser consultado em [refactor-project-1](./reports/refactor-project-1.md)
+- Relatório de auditoria pode ser contultado em [audit-project-1.md](./reports/audit-project-1.md) 
+
+- Relatório de refatoração pode ser consultado em [refactor-project-1](./reports/refactor-project-1.md)
 
 ![01](./code-smells-project/img/01.png)
 ![02](./code-smells-project/img/02.png)
