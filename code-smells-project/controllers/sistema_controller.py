@@ -3,6 +3,7 @@ import logging
 from flask import jsonify, request
 
 import config
+from auth import require_admin_auth
 from database import get_db
 
 logger = logging.getLogger(__name__)
@@ -23,11 +24,7 @@ def index():
     })
 
 
-# NOTA: /admin/reset-db e /admin/query permanecem sem autenticação, exatamente
-# como no comportamento original. Essa é uma vulnerabilidade CRITICAL documentada
-# no relatório de auditoria (reports/) — o usuário optou explicitamente por não
-# alterar o contrato/comportamento desses endpoints nesta refatoração.
-
+@require_admin_auth
 def reset_database():
     db = get_db()
     cursor = db.cursor()
@@ -40,6 +37,7 @@ def reset_database():
     return jsonify({"mensagem": "Banco de dados resetado", "sucesso": True}), 200
 
 
+@require_admin_auth
 def executar_query():
     dados = request.get_json()
     query = dados.get("sql", "")

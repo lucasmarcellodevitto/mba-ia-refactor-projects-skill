@@ -101,7 +101,7 @@ Use como pegunta a seguinte mensagem:
 
 ```Finalizando o processo sem executar o step de Refatoração```
 
-## Fase 2 — Refatoração
+## Fase 3 — Refatoração
 
 1 - Leia [mvc-guidelines.md](eferences/mvc-guidelines.md) e [refactoring-playbook.md](references/refactoring-playbook.md).
 

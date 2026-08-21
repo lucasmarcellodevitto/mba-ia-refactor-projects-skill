@@ -1,16 +1,24 @@
 ================================
 PHASE 1: PROJECT ANALYSIS
 ================================
+
 Project: ecommerce-api-legacy (Frankenstein LMS)
+
 Language:      JavaScript (Node.js)
+
 Framework:     Express 4.18.2
+
 Dependencies:  express, sqlite3
+
 Domain:        Plataforma de cursos/matrículas com checkout (LMS) — apesar do nome da pasta "ecommerce-api-legacy", o código/log identificam-na como "Frankenstein LMS" (cursos, matrículas, pagamentos)
+
 Architecture:  Monolítica sem separação de camadas — bootstrap em app.js, e toda a lógica de rotas, regras de negócio e acesso a dados concentrada em uma única classe "God Object" (AppManager.js); utils.js mistura config (com segredos hardcoded) e helpers
 Source files:  3 files analyzed (src/app.js, src/AppManager.js, src/utils.js)
+
 DB tables:     users, courses, enrollments, payments, audit_logs
 ================================
 
+---
 
 ================================
 ARCHITECTURE AUDIT REPORT

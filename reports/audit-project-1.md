@@ -1,16 +1,27 @@
 ================================
 PHASE 1: PROJECT ANALYSIS
 ================================
+
 Project: code-smells-project
+
 Language:      Python 3.10
+
 Framework:     Flask 3.1.1 (+ flask-cors 5.0.1)
+
 Dependencies:  flask, flask-cors
-Domain:        E-commerce API (produtos, usuários, pedidos, relatório de vendas)
-Architecture:  Layered incompleta (app.py = rotas + 2 endpoints admin com lógica embutida; controllers.py = camada de controller; models.py = mistura lógica de negócio com SQL cru; database.py = conexão + schema + seed). Sem separação Model/Repository.
+
+Domain:        E-commerce API (produtos, usuários, pedidos, relatório 
+de vendas)
+
+Architecture:  Layered incompleta (app.py = rotas + 2 endpoints admin 
+com lógica embutida; controllers.py = camada de controller; models.py = mistura lógica de negócio com SQL cru; database.py = conexão + schema + seed). Sem separação Model/Repository.
 Source files:  4 files analyzed (app.py, controllers.py, database.py, models.py)
+
 DB tables:     produtos, usuarios, pedidos, itens_pedido
+
 ================================
 
+--- 
 
 ================================
 ARCHITECTURE AUDIT REPORT

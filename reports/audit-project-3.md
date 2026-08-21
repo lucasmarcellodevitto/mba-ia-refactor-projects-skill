@@ -1,16 +1,25 @@
 ================================
 PHASE 1: PROJECT ANALYSIS
 ================================
+
 Project: task-manager-api
+
 Language:      Python 3
+
 Framework:     Flask 3.0.0 (flask-sqlalchemy 3.1.1, flask-cors 4.0.0)
+
 Dependencies:  flask, flask-sqlalchemy, flask-cors, marshmallow, requests, python-dotenv
+
 Domain:        Task Manager API (usuários, tasks, categorias, relatórios)
+
 Architecture:  Layered parcial — models/, routes/ e services/ existem, mas rotas concentram validação, acesso a dados e serialização (Blueprints agindo como Controller+Service+Repository)
 Source files:  15 files analyzed (.py)
+
 DB tables:     tasks, users, categories (SQLite via SQLAlchemy ORM, arquivo tasks.db)
+
 ================================
 
+---
 
 ================================
 ARCHITECTURE AUDIT REPORT

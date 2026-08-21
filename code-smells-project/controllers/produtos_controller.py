@@ -2,6 +2,7 @@ import logging
 
 from flask import jsonify, request
 
+from auth import require_admin_auth
 from errors import NotFoundError, ValidationError
 from services import produtos_service
 
@@ -28,6 +29,7 @@ def buscar_produto(id):
         return jsonify({"erro": "Erro interno"}), 500
 
 
+@require_admin_auth
 def criar_produto():
     try:
         dados = request.get_json()
@@ -41,6 +43,7 @@ def criar_produto():
         return jsonify({"erro": "Erro interno"}), 500
 
 
+@require_admin_auth
 def atualizar_produto(id):
     try:
         dados = request.get_json()
@@ -55,6 +58,7 @@ def atualizar_produto(id):
         return jsonify({"erro": "Erro interno"}), 500
 
 
+@require_admin_auth
 def deletar_produto(id):
     try:
         produtos_service.deletar_produto(id)

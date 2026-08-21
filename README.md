@@ -179,15 +179,26 @@ pip install -r requirements.txt
 # copie e edite as variaveis de ambiente se necessário
 cp .env.example .env 
 
+#caso queira definir uma chave de autenticação faça
+export ADMIN_API_KEY="uma-chave-longa-e-aleatoria"
+# Se o export não for feito a aplicação vai gerar uma chave aleatoria ao subir o projeto. Consulte a chave no console e envie X-Admin-Api-Key: <valor de ADMIN_API_KEY> no header em todas às requests
+
 # execute o projeto
 python app.py
 ```
 
 Validação rápida:
 ```bash
-curl http://localhost:5000/health
-curl http://localhost:5000/produtos
-curl http://localhost:5000/usuarios
+curl -X POST http://localhost:5000/admin/reset-db \
+  -H "X-Admin-Api-Key: <ADMIN_API_KEY>"
+
+curl -X POST http://localhost:5000/produtos \
+  -H "X-Admin-Api-Key: <ADMIN_API_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{"nome": "Produto X", "descricao": "Descrição", "preco": 10.0, "estoque": 5, "categoria": "geral"}'
+
+  curl http://localhost:5000/usuarios \
+  -H "X-Admin-Api-Key: <ADMIN_API_KEY>"
 ```
 ---
 

@@ -2,12 +2,14 @@ import logging
 
 from flask import jsonify, request
 
+from auth import require_admin_auth
 from errors import ValidationError
 from services import usuarios_service
 
 logger = logging.getLogger(__name__)
 
 
+@require_admin_auth
 def listar_usuarios():
     try:
         usuarios = usuarios_service.listar_usuarios()
@@ -17,6 +19,7 @@ def listar_usuarios():
         return jsonify({"erro": "Erro interno"}), 500
 
 
+@require_admin_auth
 def buscar_usuario(id):
     try:
         usuario = usuarios_service.buscar_usuario(id)

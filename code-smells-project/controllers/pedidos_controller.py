@@ -2,6 +2,7 @@ import logging
 
 from flask import jsonify, request
 
+from auth import require_admin_auth
 from errors import ValidationError
 from services import pedidos_service
 
@@ -39,6 +40,7 @@ def criar_pedido():
         return jsonify({"erro": "Erro interno"}), 500
 
 
+@require_admin_auth
 def listar_pedidos_usuario(usuario_id):
     try:
         pedidos = pedidos_service.get_pedidos_usuario(usuario_id)
@@ -48,6 +50,7 @@ def listar_pedidos_usuario(usuario_id):
         return jsonify({"erro": "Erro interno"}), 500
 
 
+@require_admin_auth
 def listar_todos_pedidos():
     try:
         pedidos = pedidos_service.get_todos_pedidos()
@@ -57,6 +60,7 @@ def listar_todos_pedidos():
         return jsonify({"erro": "Erro interno"}), 500
 
 
+@require_admin_auth
 def atualizar_status_pedido(pedido_id):
     try:
         dados = request.get_json()
