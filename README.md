@@ -52,8 +52,6 @@
 
 - Inicio da Fase 3 com confirmação obrigatória do usuário 
 
-- Preservação do contrato HTTP: mesmas URLs/métodos/respostas após a refatoração
-
 - Geração do relatório de auditoria no diretório de reports/ com classificação por severidade (CRITICAL/HIGH/MEDIUM/LOW)
 
 
@@ -245,6 +243,13 @@ pip install -r requirements.txt
 # copie e edite as variaveis de ambiente se necessário
 cp .env.example .env
 
+# COMO AUTENTICAR NAS APIS APÓS O AJUSTE
+# Obtenha um token chamando `POST /login` com email e senha de um usuário
+# existente (veja `seed.py` para usuários de exemplo).
+# O campo `token` da resposta é um JWT. Envie-o em todas as chamadas
+# a endpoints protegidos no header:
+#Authorization: Bearer <token>
+
 # popula o banco (rode antes do primeiro boot)
 python seed.py                 
 
@@ -254,10 +259,99 @@ python app.py
 
 Validação rápida:
 ```bash
-curl http://localhost:5000/health
-curl http://localhost:5000/tasks
-curl http://localhost:5000/users
-curl http://localhost:5000/tasks/search?status=pending
+curl -s http://localhost:5000/
+curl -s http://localhost:5000/health
+curl -s -X POST http://localhost:5000/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"joao@email.com","password":"1234"}'
+
+# Guarde o token retornado em uma variável para os exemplos seguintes
+TOKEN=$(curl -s -X POST http://localhost:5000/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"joao@email.com","password":"1234"}' | python3 -c "import sys,json;print(json.load(sys.stdin)['token'])")
+
+ GET /users — público
+curl -s http://localhost:5000/users
+
+# GET /users/<id> — público
+curl -s http://localhost:5000/users/1
+
+# POST /users — público (cadastro)
+curl -s -X POST http://localhost:5000/users \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Novo Usuário","email":"novo@email.com","password":"1234"}'
+
+# PUT /users/<id> — requer autenticação (dono ou admin)
+curl -s -X PUT http://localhost:5000/users/1 \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"João Silva Atualizado"}'
+
+# DELETE /users/<id> — requer autenticação (dono ou admin)
+curl -s -X DELETE http://localhost:5000/users/1 \
+  -H "Authorization: Bearer $TOKEN"
+
+# GET /users/<id>/tasks — público
+curl -s http://localhost:5000/users/1/tasks
+
+--- Tasks (routes/task_routes.py) ---
+
+# GET /tasks — público
+curl -s http://localhost:5000/tasks
+
+# GET /tasks/<id> — público
+curl -s http://localhost:5000/tasks/1
+
+# POST /tasks — requer autenticação (user_id só pode ser o do próprio token,
+# a menos que o chamador seja admin)
+curl -s -X POST http://localhost:5000/tasks \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Nova task","user_id":1,"category_id":1}'
+
+# PUT /tasks/<id> — requer autenticação (dono da task ou admin)
+curl -s -X PUT http://localhost:5000/tasks/1 \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"status":"in_progress"}'
+
+# DELETE /tasks/<id> — requer autenticação (dono da task ou admin)
+curl -s -X DELETE http://localhost:5000/tasks/1 \
+  -H "Authorization: Bearer $TOKEN"
+
+# GET /tasks/search — público
+curl -s "http://localhost:5000/tasks/search?q=login&status=pending"
+
+# GET /tasks/stats — público
+curl -s http://localhost:5000/tasks/stats
+
+--- Categorias e relatórios (routes/report_routes.py) ---
+
+# GET /reports/summary — público
+curl -s http://localhost:5000/reports/summary
+
+# GET /reports/user/<id> — público
+curl -s http://localhost:5000/reports/user/1
+
+# GET /categories — público
+curl -s http://localhost:5000/categories
+
+# POST /categories — requer autenticação + role admin
+curl -s -X POST http://localhost:5000/categories \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Nova categoria","color":"#ff0000"}'
+
+# PUT /categories/<id> — requer autenticação + role admin
+curl -s -X PUT http://localhost:5000/categories/1 \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"description":"Descrição atualizada"}'
+
+# DELETE /categories/<id> — requer autenticação + role admin
+curl -s -X DELETE http://localhost:5000/categories/1 \
+  -H "Authorization: Bearer $TOKEN"
+
 ```
 ---
 

@@ -12,6 +12,7 @@ from services.errors import (
     PersistenceError,
 )
 from utils.helpers import validate_email, MIN_PASSWORD_LENGTH, VALID_ROLES
+from utils.auth import generate_token
 
 logger = logging.getLogger(__name__)
 
@@ -90,13 +91,19 @@ class UserService:
         logger.info('Usuário criado: %s - %s', user.id, user.name)
         return user.to_dict()
 
-    def update_user(self, user_id, data):
+    def update_user(self, user_id, data, current_user):
         user = self.user_repo.get_by_id(user_id)
         if not user:
             raise NotFoundError('Usuário não encontrado')
 
         if not data:
             raise ValidationError('Dados inválidos')
+
+        if current_user.id != user_id and not current_user.is_admin():
+            raise ForbiddenError('Você não tem permissão para atualizar este usuário')
+
+        if 'role' in data and not current_user.is_admin():
+            raise ForbiddenError('Apenas administradores podem alterar o role de um usuário')
 
         if 'name' in data:
             user.name = data['name']
@@ -131,10 +138,13 @@ class UserService:
 
         return user.to_dict()
 
-    def delete_user(self, user_id):
+    def delete_user(self, user_id, current_user):
         user = self.user_repo.get_by_id(user_id)
         if not user:
             raise NotFoundError('Usuário não encontrado')
+
+        if current_user.id != user_id and not current_user.is_admin():
+            raise ForbiddenError('Você não tem permissão para deletar este usuário')
 
         tasks = self.task_repo.get_by_user_id(user_id)
         for t in tasks:
@@ -192,5 +202,5 @@ class UserService:
         return {
             'message': 'Login realizado com sucesso',
             'user': user.to_dict(),
-            'token': 'fake-jwt-token-' + str(user.id),
+            'token': generate_token(user),
         }

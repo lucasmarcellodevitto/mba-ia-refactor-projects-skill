@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, g
 
 from services.user_service import UserService
 from services.errors import (
@@ -9,6 +9,7 @@ from services.errors import (
     ForbiddenError,
     PersistenceError,
 )
+from utils.auth import require_auth
 
 user_bp = Blueprint('users', __name__)
 user_service = UserService()
@@ -42,27 +43,33 @@ def create_user():
 
 
 @user_bp.route('/users/<int:user_id>', methods=['PUT'])
+@require_auth
 def update_user(user_id):
     data = request.get_json()
     try:
-        user = user_service.update_user(user_id, data)
+        user = user_service.update_user(user_id, data, g.current_user)
     except NotFoundError as e:
         return jsonify({'error': str(e)}), 404
     except ValidationError as e:
         return jsonify({'error': str(e)}), 400
     except ConflictError as e:
         return jsonify({'error': str(e)}), 409
+    except ForbiddenError as e:
+        return jsonify({'error': str(e)}), 403
     except PersistenceError as e:
         return jsonify({'error': str(e)}), 500
     return jsonify(user), 200
 
 
 @user_bp.route('/users/<int:user_id>', methods=['DELETE'])
+@require_auth
 def delete_user(user_id):
     try:
-        user_service.delete_user(user_id)
+        user_service.delete_user(user_id, g.current_user)
     except NotFoundError as e:
         return jsonify({'error': str(e)}), 404
+    except ForbiddenError as e:
+        return jsonify({'error': str(e)}), 403
     except PersistenceError as e:
         return jsonify({'error': str(e)}), 500
     return jsonify({'message': 'Usuário deletado com sucesso'}), 200

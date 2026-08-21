@@ -5,7 +5,7 @@ from models.task import Task
 from repositories.task_repository import TaskRepository
 from repositories.user_repository import UserRepository
 from repositories.category_repository import CategoryRepository
-from services.errors import ValidationError, NotFoundError, PersistenceError
+from services.errors import ValidationError, NotFoundError, ForbiddenError, PersistenceError
 from utils.helpers import (
     MIN_TITLE_LENGTH,
     MAX_TITLE_LENGTH,
@@ -52,7 +52,7 @@ class TaskService:
         data['overdue'] = task.is_overdue()
         return data
 
-    def create_task(self, data):
+    def create_task(self, data, current_user):
         if not data:
             raise ValidationError('Dados inválidos')
 
@@ -71,6 +71,9 @@ class TaskService:
             raise ValidationError('Status inválido')
         if not Task.validate_priority(priority):
             raise ValidationError('Prioridade deve ser entre 1 e 5')
+
+        if user_id and user_id != current_user.id and not current_user.is_admin():
+            raise ForbiddenError('Você só pode criar tasks para si mesmo')
 
         if user_id and not self.user_repo.get_by_id(user_id):
             raise NotFoundError('Usuário não encontrado')
@@ -104,13 +107,20 @@ class TaskService:
         logger.info('Task criada: %s - %s', task.id, task.title)
         return task.to_dict()
 
-    def update_task(self, task_id, data):
+    def update_task(self, task_id, data, current_user):
         task = self.task_repo.get_by_id(task_id)
         if not task:
             raise NotFoundError('Task não encontrada')
 
         if not data:
             raise ValidationError('Dados inválidos')
+
+        if task.user_id != current_user.id and not current_user.is_admin():
+            raise ForbiddenError('Você não tem permissão para atualizar esta task')
+
+        if 'user_id' in data and data['user_id'] and data['user_id'] != current_user.id \
+                and not current_user.is_admin():
+            raise ForbiddenError('Você só pode atribuir tasks a si mesmo')
 
         if 'title' in data:
             if len(data['title']) < MIN_TITLE_LENGTH:
@@ -165,10 +175,13 @@ class TaskService:
         logger.info('Task atualizada: %s', task.id)
         return task.to_dict()
 
-    def delete_task(self, task_id):
+    def delete_task(self, task_id, current_user):
         task = self.task_repo.get_by_id(task_id)
         if not task:
             raise NotFoundError('Task não encontrada')
+
+        if task.user_id != current_user.id and not current_user.is_admin():
+            raise ForbiddenError('Você não tem permissão para deletar esta task')
 
         try:
             self.task_repo.delete(task)

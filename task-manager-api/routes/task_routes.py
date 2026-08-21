@@ -1,9 +1,10 @@
 import logging
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, g
 
 from services.task_service import TaskService
-from services.errors import ValidationError, NotFoundError, PersistenceError
+from services.errors import ValidationError, NotFoundError, ForbiddenError, PersistenceError
+from utils.auth import require_auth
 
 task_bp = Blueprint('tasks', __name__)
 task_service = TaskService()
@@ -28,39 +29,48 @@ def get_task(task_id):
 
 
 @task_bp.route('/tasks', methods=['POST'])
+@require_auth
 def create_task():
     data = request.get_json()
     try:
-        task = task_service.create_task(data)
+        task = task_service.create_task(data, g.current_user)
     except ValidationError as e:
         return jsonify({'error': str(e)}), 400
     except NotFoundError as e:
         return jsonify({'error': str(e)}), 404
+    except ForbiddenError as e:
+        return jsonify({'error': str(e)}), 403
     except PersistenceError as e:
         return jsonify({'error': str(e)}), 500
     return jsonify(task), 201
 
 
 @task_bp.route('/tasks/<int:task_id>', methods=['PUT'])
+@require_auth
 def update_task(task_id):
     data = request.get_json()
     try:
-        task = task_service.update_task(task_id, data)
+        task = task_service.update_task(task_id, data, g.current_user)
     except NotFoundError as e:
         return jsonify({'error': str(e)}), 404
     except ValidationError as e:
         return jsonify({'error': str(e)}), 400
+    except ForbiddenError as e:
+        return jsonify({'error': str(e)}), 403
     except PersistenceError as e:
         return jsonify({'error': str(e)}), 500
     return jsonify(task), 200
 
 
 @task_bp.route('/tasks/<int:task_id>', methods=['DELETE'])
+@require_auth
 def delete_task(task_id):
     try:
-        task_service.delete_task(task_id)
+        task_service.delete_task(task_id, g.current_user)
     except NotFoundError as e:
         return jsonify({'error': str(e)}), 404
+    except ForbiddenError as e:
+        return jsonify({'error': str(e)}), 403
     except PersistenceError as e:
         return jsonify({'error': str(e)}), 500
     return jsonify({'message': 'Task deletada com sucesso'}), 200

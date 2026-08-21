@@ -3,6 +3,7 @@ from flask import Blueprint, request, jsonify
 from services.report_service import ReportService
 from services.category_service import CategoryService
 from services.errors import ValidationError, NotFoundError, PersistenceError
+from utils.auth import require_auth, require_admin
 
 report_bp = Blueprint('reports', __name__)
 report_service = ReportService()
@@ -28,6 +29,8 @@ def get_categories():
 
 
 @report_bp.route('/categories', methods=['POST'])
+@require_auth
+@require_admin
 def create_category():
     data = request.get_json()
     try:
@@ -40,6 +43,8 @@ def create_category():
 
 
 @report_bp.route('/categories/<int:cat_id>', methods=['PUT'])
+@require_auth
+@require_admin
 def update_category(cat_id):
     data = request.get_json()
     try:
@@ -52,6 +57,8 @@ def update_category(cat_id):
 
 
 @report_bp.route('/categories/<int:cat_id>', methods=['DELETE'])
+@require_auth
+@require_admin
 def delete_category(cat_id):
     try:
         category_service.delete_category(cat_id)

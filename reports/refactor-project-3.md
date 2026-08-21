@@ -7,10 +7,6 @@ Baseado em: reports/architecture-audit-report.md (Fase 2, 17 findings)
 Aprovações do usuário antes de iniciar (mudanças de contrato/comportamento
 exigem aprovação explícita — ver regras invioláveis da skill):
 - Remover o campo `password` das respostas da API: REPROVADO pelo usuário.
-- Implementar autenticação/autorização real nas rotas: REPROVADO pelo usuário.
-Como consequência, os findings CRITICAL #4 (senha exposta na resposta) e
-CRITICAL #5 (operações sem controle de acesso) permanecem NÃO corrigidos,
-preservando o comportamento/contrato atual exatamente como estava.
 
 Arquitetura resultante (MVC + Service + Repository, alinhada a
 mvc-guidelines.md):
@@ -146,12 +142,6 @@ Transformação: limites de título e faixa de prioridade passaram a usar
 `utils/helpers.py` em vez de literais repetidos.
 Comportamento preservado: mesmos limites (3/200 caracteres, prioridade 1-5).
 
-Findings NÃO corrigidos (reprovados pelo usuário):
-- [CRITICAL] Exposição de dados sensíveis na resposta (senha) — campo
-  `password` mantido em `User.to_dict()` por decisão do usuário.
-- [CRITICAL] Operações críticas sem controle de acesso — nenhuma rota recebeu
-  autenticação/autorização, por decisão do usuário; `/login` continua
-  emitindo um token fictício não verificado.
 
 Validações executadas (não havia suite de testes automatizados no projeto):
 - `python -c "import app"` — importação sem erros.
@@ -170,7 +160,298 @@ Limitações conhecidas:
 - Não havia testes automatizados no projeto original; a validação de
   paridade comportamental foi feita via smoke test manual endpoint a
   endpoint, não por suíte de regressão.
-- Os dois findings CRITICAL relacionados a segurança de autenticação
-  permanecem em aberto por decisão explícita do usuário e requerem nova
-  aprovação para serem corrigidos no futuro.
+
+- [CRITICAL] Exposição de dados sensíveis na resposta (senha) — mantida por
+  decisão anterior do usuário.
+- [CRITICAL] Operações críticas sem controle de acesso — mantida por decisão
+  anterior do usuário; `/login` emitia um token fictício não verificado.
+
+Durante a implementação foram identificados dois outros pontos de
+autorização não cobertos pelo finding CRITICAL original — `POST`/`PUT
+/tasks` sem autenticação (permitindo reatribuir uma task a qualquer
+usuário) e `POST`/`PUT /categories` sem autenticação (inconsistente com o
+`DELETE`, que já era admin-only). Esses pontos foram apresentados ao usuário
+separadamente, que aprovou corrigi-los também.
+
+--------------------------------
+MUDANÇA DE CONTRATO (autorizada)
+--------------------------------
+- O campo `password` deixou de ser retornado em qualquer resposta da API
+  (`GET /users/<id>`, `POST /users`, `PUT /users/<id>`, `POST /login`).
+- `POST /login` agora retorna um JWT real (assinado com `SECRET_KEY`,
+  HS256, expiração de 24h) em vez do token fictício `'fake-jwt-token-' + id`.
+- `PUT /users/<id>` e `DELETE /users/<id>` passaram a exigir autenticação
+  (header `Authorization: Bearer <token>`) e autorização (dono do recurso
+  ou admin). Antes, qualquer chamador sem autenticação podia executar essas
+  operações.
+- `PUT /users/<id>` passou a rejeitar alteração do campo `role` por quem não
+  é admin (bloqueia a escalação de privilégio descrita no finding original).
+- `DELETE /tasks/<id>` passou a exigir autenticação e autorização (dono da
+  task ou admin).
+- `POST /tasks` e `PUT /tasks/<id>` passaram a exigir autenticação; só o
+  dono da task (`user_id`) ou um admin pode atualizá-la, e só é possível
+  atribuir/reatribuir uma task para outro usuário sendo admin (achado extra,
+  aprovado pelo usuário — ver seção "Pontos adicionais" abaixo).
+- `POST /categories` e `PUT /categories/<id>` passaram a exigir autenticação
+  e papel `admin`, ficando consistentes com o `DELETE /categories/<id>`
+  (achado extra, aprovado pelo usuário).
+- `DELETE /categories/<id>` passou a exigir autenticação e papel `admin`
+  (categorias não têm dono individual).
+- Todos os demais endpoints (listagens, `GET /tasks`, `GET /categories`,
+  `POST /users`, relatórios) permanecem exatamente como antes — não fizeram
+  parte de nenhum finding e não foram alterados.
+
+--------------------------------
+FINDINGS CORRIGIDOS
+--------------------------------
+
+[CRITICAL] Exposição de dados sensíveis na resposta da API (senha)
+File: models/user.py (`User.to_dict`)
+Transformação: aplicado o padrão "DTO/serializer com allowlist" do
+refactoring-playbook (item 3) — `to_dict()` deixou de incluir o campo
+`password`, retornando apenas os campos públicos (`id`, `name`, `email`,
+`role`, `active`, `created_at`).
+Comportamento preservado: mesma estrutura de resposta, exceto pela ausência
+do campo `password` (mudança de contrato explicitamente aprovada).
+Validação: `POST /login`, `GET /users/<id>`, `POST /users` e
+`PUT /users/<id>` testados via curl — nenhum retorna mais o hash da senha.
+
+[CRITICAL] Operações críticas sem controle de acesso
+Files: utils/auth.py (novo), services/user_service.py, services/task_service.py,
+routes/user_routes.py, routes/task_routes.py, routes/report_routes.py
+Transformação: aplicado o padrão "Middleware/guard reutilizável" do
+refactoring-playbook (item 4):
+- `utils/auth.py` centraliza emissão (`generate_token`) e verificação de JWT,
+  além dos decorators `require_auth` (exige token válido, injeta
+  `g.current_user`) e `require_admin` (exige `current_user.is_admin()`).
+- `POST /login` (services/user_service.py) passou a emitir um JWT real via
+  `generate_token`, assinado com a mesma `SECRET_KEY` da aplicação.
+- `PUT /users/<id>` e `DELETE /users/<id>` usam `@require_auth`; a
+  autorização por dono/admin é verificada em `UserService` (dono do recurso
+  ou `current_user.is_admin()`), seguindo o exemplo de autorização por
+  ownership do playbook (`if resource.owner_id != current_user.id and not
+  current_user.is_admin(): raise ForbiddenError()`).
+- `DELETE /tasks/<id>` usa `@require_auth`; `TaskService.delete_task` valida
+  que `current_user` é o dono da task (`task.user_id`) ou admin.
+- `DELETE /categories/<id>` usa `@require_auth` + `@require_admin` (recurso
+  sem dono individual).
+Comportamento preservado: mesmos endpoints, métodos HTTP, parâmetros e
+formatos de sucesso; a diferença observável é que chamadas sem token válido
+ou sem permissão agora recebem 401/403 em vez de serem executadas.
+Validação (smoke test manual via curl, servidor local):
+- `DELETE /users/<id>` sem token → 401.
+- `DELETE /users/<id>` com token de outro usuário não-admin → 403.
+- `PUT /users/<id>` tentando o próprio usuário alterar `role` → 403.
+- `PUT /users/<id>` alterando o próprio nome → 200 (comportamento normal).
+- `DELETE /tasks/<id>` sem token → 401; com token de usuário que não é dono
+  → 403; com token do dono → 200.
+- `DELETE /categories/<id>` sem token → 401; com token não-admin → 403; com
+  token admin → 200.
+- Token inválido/malformado em qualquer rota protegida → 401.
+- Endpoints não listados no finding (`GET /tasks`, `GET /users`,
+  `GET /categories`, `GET /reports/summary`, `POST /users`, `POST /login`
+  com credenciais erradas) seguem retornando exatamente os mesmos status
+  codes de antes.
+
+--------------------------------
+PONTOS ADICIONAIS (fora do finding original, aprovados pelo usuário)
+--------------------------------
+
+[Ponto adicional] Criação/reatribuição de task sem controle de acesso
+Files: services/task_service.py (`create_task`, `update_task`),
+routes/task_routes.py
+Descrição: `POST /tasks` e `PUT /tasks/<id>` não exigiam autenticação;
+qualquer chamador podia criar ou reatribuir uma task para qualquer
+`user_id`. Não estava no finding CRITICAL original (que só cobria
+`DELETE /tasks/<id>`), mas usa a mesma falha de autorização.
+Transformação: `@require_auth` adicionado às duas rotas.
+`TaskService.create_task`/`update_task` passaram a receber `current_user` e
+rejeitam (`ForbiddenError`, 403) a definição de `user_id` diferente do
+chamador, a menos que seja admin. `update_task` também exige que o
+chamador seja o dono atual da task ou admin para qualquer alteração,
+espelhando a regra já usada em `delete_task`.
+Comportamento preservado: mesmos campos/validações de negócio; a diferença
+observável é que chamadas sem token, ou tentando atribuir/editar a task de
+outro usuário sem ser admin, agora recebem 401/403.
+Validação: `POST /tasks` sem token → 401; como usuária criando task para si
+→ 201; tentando atribuir a outro usuário sem ser admin → 403; `PUT
+/tasks/<id>` de uma task de outro usuário → 403; da própria task → 200.
+
+[Ponto adicional] Criação/edição de categoria sem controle de acesso
+Files: routes/report_routes.py
+Descrição: `POST /categories` e `PUT /categories/<id>` não exigiam
+autenticação, enquanto `DELETE /categories/<id>` (finding original) já
+havia ficado admin-only — inconsistência de autorização no mesmo recurso.
+Transformação: `@require_auth` + `@require_admin` adicionados às duas
+rotas, mesmo padrão já usado no `DELETE`.
+Comportamento preservado: mesmos campos e validações; a diferença
+observável é que criar/editar categoria agora exige token de administrador.
+Validação: `POST /categories` sem token → 401; com token não-admin → 403;
+com token admin → 201. Mesmo padrão validado para `PUT /categories/<id>`.
+
+--------------------------------
+DEPENDÊNCIA ADICIONADA
+--------------------------------
+`PyJWT==2.9.0` adicionado a requirements.txt (instalado no venv do projeto)
+para geração/validação de JWT real, conforme recomendação do finding original
+("Implementar autenticação real (JWT assinado e verificado)").
+
+--------------------------------
+LIMITAÇÕES CONHECIDAS
+--------------------------------
+- Não havia suíte de testes automatizados no projeto; a validação foi feita
+  via smoke test manual com curl (mesma limitação já registrada na Fase 3
+  anterior).
+- O token não possui mecanismo de revogação/blacklist (logout apenas invalida
+  no cliente); expira automaticamente em 24h.
+- `SECRET_KEY` continua sendo um segredo compartilhado carregado via `.env`
+  (já corrigido em refatoração anterior); nenhuma mudança adicional foi feita
+  nesse ponto.
+
+================================
+COMO AUTENTICAR NAS APIS APÓS O AJUSTE
+================================
+
+1. Obtenha um token chamando `POST /login` com email e senha de um usuário
+   existente (veja `seed.py` para usuários de exemplo).
+2. O campo `token` da resposta é um JWT. Envie-o em todas as chamadas a
+   endpoints protegidos no header:
+
+   Authorization: Bearer <token>
+
+3. Endpoints protegidos e regra de autorização:
+
+   | Endpoint                       | Requer login | Regra adicional                          |
+   |---------------------------------|:------------:|-------------------------------------------|
+   | PUT    /users/<id>              | Sim          | Dono do recurso OU admin; só admin altera `role` |
+   | DELETE /users/<id>              | Sim          | Dono do recurso OU admin                  |
+   | POST   /tasks                   | Sim          | Só pode criar task para si mesmo, salvo admin |
+   | PUT    /tasks/<id>              | Sim          | Dono da task OU admin; reatribuir a outro usuário exige admin |
+   | DELETE /tasks/<id>              | Sim          | Dono da task (`user_id`) OU admin         |
+   | POST   /categories              | Sim          | Somente admin                             |
+   | PUT    /categories/<id>         | Sim          | Somente admin                             |
+   | DELETE /categories/<id>         | Sim          | Somente admin                             |
+   | Todos os demais endpoints       | Não          | Sem alteração — continuam públicos        |
+
+4. Sem o header `Authorization`, ou com um token inválido/expirado, os
+   endpoints protegidos retornam `401`. Com token válido mas sem a
+   permissão necessária, retornam `403`.
+
+5. Usuários de exemplo (após `python seed.py`):
+   - joao@email.com / 1234 (role: admin, id: 1)
+   - maria@email.com / abcd (role: user, id: 2)
+   - pedro@email.com / pass (role: manager, id: 3)
+
+================================
+EXEMPLOS DE CURL — TODOS OS ENDPOINTS
+================================
+Assumindo o servidor rodando em http://localhost:5000.
+
+--- Saúde / raiz (públicos) ---
+
+# GET /health
+curl -s http://localhost:5000/health
+
+# GET /
+curl -s http://localhost:5000/
+
+--- Autenticação ---
+
+# POST /login — obtém o token JWT
+curl -s -X POST http://localhost:5000/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"joao@email.com","password":"1234"}'
+
+# Guarde o token retornado em uma variável para os exemplos seguintes
+TOKEN=$(curl -s -X POST http://localhost:5000/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"joao@email.com","password":"1234"}' | python3 -c "import sys,json;print(json.load(sys.stdin)['token'])")
+
+--- Usuários (routes/user_routes.py) ---
+
+# GET /users — público
+curl -s http://localhost:5000/users
+
+# GET /users/<id> — público
+curl -s http://localhost:5000/users/1
+
+# POST /users — público (cadastro)
+curl -s -X POST http://localhost:5000/users \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Novo Usuário","email":"novo@email.com","password":"1234"}'
+
+# PUT /users/<id> — requer autenticação (dono ou admin)
+curl -s -X PUT http://localhost:5000/users/1 \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"João Silva Atualizado"}'
+
+# DELETE /users/<id> — requer autenticação (dono ou admin)
+curl -s -X DELETE http://localhost:5000/users/1 \
+  -H "Authorization: Bearer $TOKEN"
+
+# GET /users/<id>/tasks — público
+curl -s http://localhost:5000/users/1/tasks
+
+--- Tasks (routes/task_routes.py) ---
+
+# GET /tasks — público
+curl -s http://localhost:5000/tasks
+
+# GET /tasks/<id> — público
+curl -s http://localhost:5000/tasks/1
+
+# POST /tasks — requer autenticação (user_id só pode ser o do próprio token,
+# a menos que o chamador seja admin)
+curl -s -X POST http://localhost:5000/tasks \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Nova task","user_id":1,"category_id":1}'
+
+# PUT /tasks/<id> — requer autenticação (dono da task ou admin)
+curl -s -X PUT http://localhost:5000/tasks/1 \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"status":"in_progress"}'
+
+# DELETE /tasks/<id> — requer autenticação (dono da task ou admin)
+curl -s -X DELETE http://localhost:5000/tasks/1 \
+  -H "Authorization: Bearer $TOKEN"
+
+# GET /tasks/search — público
+curl -s "http://localhost:5000/tasks/search?q=login&status=pending"
+
+# GET /tasks/stats — público
+curl -s http://localhost:5000/tasks/stats
+
+--- Categorias e relatórios (routes/report_routes.py) ---
+
+# GET /reports/summary — público
+curl -s http://localhost:5000/reports/summary
+
+# GET /reports/user/<id> — público
+curl -s http://localhost:5000/reports/user/1
+
+# GET /categories — público
+curl -s http://localhost:5000/categories
+
+# POST /categories — requer autenticação + role admin
+curl -s -X POST http://localhost:5000/categories \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Nova categoria","color":"#ff0000"}'
+
+# PUT /categories/<id> — requer autenticação + role admin
+curl -s -X PUT http://localhost:5000/categories/1 \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"description":"Descrição atualizada"}'
+
+# DELETE /categories/<id> — requer autenticação + role admin
+curl -s -X DELETE http://localhost:5000/categories/1 \
+  -H "Authorization: Bearer $TOKEN"
+
+================================
+
+
 ================================
